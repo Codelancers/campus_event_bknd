@@ -27,6 +27,7 @@ public class SecurityConfig {
                                 "/api/admins/register",
                                 "/api/admins/otp",
                                 "/api/admins/verify",
+//                                "/api/events/**",
                                 // Swagger/OpenAPI paths - no authorization required
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

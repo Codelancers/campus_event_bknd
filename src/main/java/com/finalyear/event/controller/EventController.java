@@ -2,6 +2,7 @@ package com.finalyear.event.controller;
 
 import com.finalyear.event.entity.Event;
 import com.finalyear.event.payload.request.EventRequest;
+import com.finalyear.event.payload.request.EventCreateRequest;
 import com.finalyear.event.service.EventService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class EventController {
     // Create event
     @PostMapping
     public ResponseEntity<?> create(@RequestParam String creatorId,
-                                    @RequestBody EventRequest request) {
+                                    @ModelAttribute EventCreateRequest request) {
         return ResponseEntity.ok(eventService.create(creatorId, request));
     }
 
@@ -50,5 +51,16 @@ public class EventController {
     @GetMapping
     public ResponseEntity<List<Event>> list() {
         return ResponseEntity.ok(eventService.listAll());
+    }
+
+    // List events by department with optional eventType filter
+    @GetMapping("/department/{department}")
+    public ResponseEntity<List<Event>> listByDepartment(@PathVariable String department,
+                                                        @RequestParam(required = false) Integer eventType) {
+        if (eventType != null) {
+            return ResponseEntity.ok(eventService.listByDepartmentAndType(department, eventType));
+        } else {
+            return ResponseEntity.ok(eventService.listByDepartment(department));
+        }
     }
 }

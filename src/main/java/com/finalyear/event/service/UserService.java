@@ -29,6 +29,7 @@ public class UserService {
         user.setPhone(request.getPhone());
         user.setDepartment(request.getDepartment());
         user.setYear(request.getYear());
+        user.setRollNo(request.getRollNo());
         user.setRoles(List.of("STUDENT"));
         user.setPoints(0);
         

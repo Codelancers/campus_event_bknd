@@ -3,6 +3,7 @@ package com.finalyear.event.service;
 import com.finalyear.event.entity.NotificationEntity;
 import com.finalyear.event.payload.request.NotificationRequest;
 import com.finalyear.event.repository.NotificationRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -12,9 +13,11 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository, SimpMessagingTemplate messagingTemplate) {
         this.notificationRepository = notificationRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public NotificationEntity create(NotificationRequest request) {
@@ -41,5 +44,13 @@ public class NotificationService {
 
     public List<NotificationEntity> listAll() {
         return notificationRepository.findAll();
+    }
+
+    public void sendEventNotification(Object payload) {
+        messagingTemplate.convertAndSend("/topic/events", payload);
+    }
+
+    public void sendDepartmentNotification(String department, Object payload) {
+        messagingTemplate.convertAndSend("/topic/events/" + department, payload);
     }
 }
