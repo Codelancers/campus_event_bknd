@@ -1,16 +1,18 @@
 package com.finalyear.event.controller;
 
 import com.finalyear.event.entity.Event;
-import com.finalyear.event.payload.request.EventRequest;
+import com.finalyear.event.payload.request.EventUpdateRequest;
 import com.finalyear.event.payload.request.EventCreateRequest;
+import com.finalyear.event.payload.response.ApiResponse;
 import com.finalyear.event.service.EventService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/events")
+@RequestMapping("/api/events")  // 🔥 Versioned & clean
 public class EventController {
 
     private final EventService eventService;
@@ -19,48 +21,63 @@ public class EventController {
         this.eventService = eventService;
     }
 
-    // Create event
-    @PostMapping
-    public ResponseEntity<?> create(@RequestParam String creatorId,
-                                    @ModelAttribute EventCreateRequest request) {
-        return ResponseEntity.ok(eventService.create(creatorId, request));
+    // 🔥 CREATE EVENT
+    @PostMapping("/create")
+    public ResponseEntity<?> createEvent(@RequestParam String creatorId,
+                                         @ModelAttribute EventCreateRequest request) {
+        Event event = eventService.create(creatorId, request);
+        return ResponseEntity.ok(new ApiResponse("Event created successfully", event));
     }
 
-    // Update event
-    @PutMapping("/{eventId}")
-    public ResponseEntity<?> update(@PathVariable String eventId,
-                                    @RequestBody EventRequest request) {
-        return ResponseEntity.ok(eventService.update(eventId, request));
+    // 🔥 UPDATE EVENT
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateEvent(
+            @PathVariable String id,
+            @ModelAttribute EventUpdateRequest request) {
+
+        Event updated = eventService.updateEvent(id, request);
+        return ResponseEntity.ok(new ApiResponse("Event updated successfully", updated));
     }
 
-    // Change event status
-    @PutMapping("/{eventId}/status")
-    public ResponseEntity<?> changeStatus(@PathVariable String eventId,
+    
+
+
+    // 🔥 CHANGE STATUS
+    @PatchMapping("/{eventId}/status")
+    public ResponseEntity<?> updateStatus(@PathVariable String eventId,
                                           @RequestParam String status) {
-        return ResponseEntity.ok(eventService.changeStatus(eventId, status));
+        Event updated = eventService.changeStatus(eventId, status);
+        return ResponseEntity.ok(new ApiResponse("Event status updated", updated));
     }
 
-    // Delete event
+    // 🔥 DELETE EVENT
     @DeleteMapping("/{eventId}")
-    public ResponseEntity<?> delete(@PathVariable String eventId) {
+    public ResponseEntity<?> deleteEvent(@PathVariable String eventId) {
         eventService.delete(eventId);
-        return ResponseEntity.ok("Event deleted");
+        return ResponseEntity.ok(new ApiResponse("Event deleted", null));
     }
 
-    // List all events
-    @GetMapping
-    public ResponseEntity<List<Event>> list() {
-        return ResponseEntity.ok(eventService.listAll());
+    // 🔥 LIST ALL EVENTS
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllEvents() {
+        List<Event> events = eventService.listAll();
+        return ResponseEntity.ok(new ApiResponse("Events retrieved", events));
     }
 
-    // List events by department with optional eventType filter
+    // 🔥 LIST BY DEPARTMENT (Optional Type)
     @GetMapping("/department/{department}")
-    public ResponseEntity<List<Event>> listByDepartment(@PathVariable String department,
-                                                        @RequestParam(required = false) Integer eventType) {
+    public ResponseEntity<?> getEventsByDepartment(
+            @PathVariable String department,
+            @RequestParam(required = false) Integer eventType) {
+
+        List<Event> events;
+
         if (eventType != null) {
-            return ResponseEntity.ok(eventService.listByDepartmentAndType(department, eventType));
+            events = eventService.listByDepartmentAndType(department, eventType);
         } else {
-            return ResponseEntity.ok(eventService.listByDepartment(department));
+            events = eventService.listByDepartment(department);
         }
+
+        return ResponseEntity.ok(new ApiResponse("Events retrieved", events));
     }
 }

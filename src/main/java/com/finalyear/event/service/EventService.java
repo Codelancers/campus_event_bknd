@@ -1,12 +1,14 @@
 package com.finalyear.event.service;
 
 import com.finalyear.event.entity.Event;
-import com.finalyear.event.payload.request.EventRequest;
+import com.finalyear.event.payload.request.EventUpdateRequest;
 import com.finalyear.event.payload.request.EventCreateRequest;
 import com.finalyear.event.repository.EventRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.io.IOException;
@@ -19,34 +21,42 @@ public class EventService {
     private final SequenceGeneratorService sequenceGeneratorService;
     private final NotificationService notificationService;
 
-    public EventService(EventRepository eventRepository, SequenceGeneratorService sequenceGeneratorService, NotificationService notificationService) {
+    public EventService(EventRepository eventRepository,
+                        SequenceGeneratorService sequenceGeneratorService,
+                        NotificationService notificationService) {
         this.eventRepository = eventRepository;
         this.sequenceGeneratorService = sequenceGeneratorService;
         this.notificationService = notificationService;
     }
 
+    // CREATE EVENT
     public Event create(String creatorId, EventCreateRequest request) {
+
         Event event = new Event();
-        
-        event.setEventId("EVENT" + String.format("%03d", sequenceGeneratorService.generateSequence(Event.SEQUENCE_NAME)));
+
+        event.setEventId("EVENT" + String.format("%03d",
+                sequenceGeneratorService.generateSequence(Event.SEQUENCE_NAME)));
+
         event.setTitle(request.getTitle());
         event.setDescription(request.getDescription());
+        event.setVenue(request.getVenue());
         event.setDepartment(request.getDepartment());
         event.setEventType(request.getEventType());
-        event.setVenue(request.getVenue());
-        
+        event.setRequirements(request.getRequirements());
+
         event.setStartTime(request.getEventStartTime());
         event.setEndTime(request.getEventEndTime());
         event.setRegistrationEndDate(request.getRegistrationEndDate());
-        
-        if (request.getMaxParticipants() != null) {
-            event.setMaxParticipants(request.getMaxParticipants());
-        } else {
-            event.setMaxParticipants(-1); // -1 indicates unlimited
-        }
-        
+
+        event.setMaxParticipants(
+                request.getMaxParticipants() != null
+                        ? request.getMaxParticipants()
+                        : -1
+        );
+
         event.setCount(0);
-        
+
+        // Handle poster upload
         try {
             if (request.getPoster() != null && !request.getPoster().isEmpty()) {
                 event.setPoster(new Binary(request.getPoster().getBytes()));
@@ -55,66 +65,97 @@ public class EventService {
             throw new RuntimeException("Error processing poster image", e);
         }
 
-        event.setRequirements(request.getRequirements());
-        
         event.setCreatedBy(creatorId);
         event.setStatus("SCHEDULED");
-
         event.setCreatedAt(Instant.now());
         event.setUpdatedAt(Instant.now());
 
-        Event savedEvent = eventRepository.save(event);
+        Event saved = eventRepository.save(event);
 
-        // Send notification
-        if (savedEvent.getDepartment() == null || savedEvent.getDepartment().isEmpty() || "All".equalsIgnoreCase(savedEvent.getDepartment())) {
-            notificationService.sendEventNotification(savedEvent);
+        // Notifications
+        if (saved.getDepartment() == null ||
+            saved.getDepartment().equalsIgnoreCase("All") ||
+            saved.getDepartment().isEmpty()) {
+
+            notificationService.sendEventNotification(saved);
+
         } else {
-            notificationService.sendDepartmentNotification(savedEvent.getDepartment(), savedEvent);
+            notificationService.sendDepartmentNotification(saved.getDepartment(), saved);
         }
 
-        return savedEvent;
+        return saved;
     }
 
-    public Event update(String eventId, EventRequest request) {
-        Event event = eventRepository.findById(eventId)
+    // UPDATE EVENT
+    public Event updateEvent(String id, EventUpdateRequest request) {
+
+        Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
         if (request.getTitle() != null) event.setTitle(request.getTitle());
         if (request.getDescription() != null) event.setDescription(request.getDescription());
-        if (request.getDepartment() != null) event.setDepartment(request.getDepartment());
         if (request.getVenue() != null) event.setVenue(request.getVenue());
-        if (request.getStartTime() != null) event.setStartTime(java.time.LocalDateTime.parse(request.getStartTime()));
-        if (request.getEndTime() != null) event.setEndTime(java.time.LocalDateTime.parse(request.getEndTime()));
-        if (request.getMaxParticipants() != null) event.setMaxParticipants(request.getMaxParticipants());
-        if (request.getCoverImageUrl() != null) event.setCoverImageUrl(request.getCoverImageUrl());
+        if (request.getDepartment() != null) event.setDepartment(request.getDepartment());
+        if (request.getEventType() != null) event.setEventType(request.getEventType());
+        if (request.getRequirements() != null) event.setRequirements(request.getRequirements());
+        if (request.getRegistrationEndDate() != null)
+            event.setRegistrationEndDate(request.getRegistrationEndDate());
+        if (request.getMaxParticipants() != null)
+            event.setMaxParticipants(request.getMaxParticipants());
+        if (request.getStatus() != null) event.setStatus(request.getStatus());
+
+        // 🔥 Handle poster upload (optional)
+        if (request.getPoster() != null && !request.getPoster().isEmpty()) {
+            try {
+                Binary posterBinary = new Binary(request.getPoster().getBytes());
+                event.setPoster(posterBinary);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to process poster image", e);
+            }
+        }
+
 
         event.setUpdatedAt(Instant.now());
+
         return eventRepository.save(event);
     }
 
-    public Event changeStatus(String eventId, String status) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
 
+    // CHANGE STATUS
+    public Event changeStatus(String id, String status) {
+        Event event = getEventOrThrow(id);
         event.setStatus(status);
         event.setUpdatedAt(Instant.now());
-
         return eventRepository.save(event);
     }
 
-    public void delete(String eventId) {
-        eventRepository.deleteById(eventId);
+
+    // DELETE EVENT
+    public void delete(String id) {
+        getEventOrThrow(id); // ensures event exists
+        eventRepository.deleteById(id);
     }
 
+
+    // LIST ALL EVENTS
     public List<Event> listAll() {
         return eventRepository.findAll();
     }
 
+    // FILTER BY DEPARTMENT
     public List<Event> listByDepartment(String department) {
-        return eventRepository.findEventsForDepartment(department, java.time.LocalDate.now());
+        return eventRepository.findEventsForDepartment(department, LocalDate.now());
     }
 
+    // FILTER BY DEPARTMENT + TYPE
     public List<Event> listByDepartmentAndType(String department, Integer eventType) {
-        return eventRepository.findEventsForDepartmentAndType(department, eventType, java.time.LocalDate.now());
+        return eventRepository.findEventsForDepartmentAndType(department, eventType, LocalDate.now());
     }
+
+    public Event getEventOrThrow(String id) {
+    return eventRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
 }
+
+}
+
