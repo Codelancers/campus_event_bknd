@@ -47,6 +47,13 @@ public class AdminService {
         return adminRepository.findByEmail(email).isPresent();
     }
 
+    public boolean adminExistsById(String adminId) {
+        return adminRepository.findById(adminId).isPresent();
+    }
+
+    public boolean userExistsById(String userId) {
+        return userRepository.findById(userId).isPresent();
+    }
 
 
     public Admin update(String adminId, AdminUpdateRequest request) {

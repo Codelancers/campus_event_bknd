@@ -18,8 +18,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http.csrf(csrf -> csrf.disable()).cors(cors -> {})
+        http.csrf(csrf -> csrf.disable())
+                .cors(cors -> {})
                 .authorizeHttpRequests(auth -> auth
+
+                        // Public routes
                         .requestMatchers(
                                 "/api/users/register",
                                 "/api/users/otp",
@@ -27,20 +30,17 @@ public class SecurityConfig {
                                 "/api/admins/register",
                                 "/api/admins/otp",
                                 "/api/admins/verify",
-//                                "/api/events/**",
-                                // Swagger/OpenAPI paths - no authorization required
+
+                                // Swagger
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
-                                "/v3/api-docs",
                                 "/swagger-resources/**",
-                                "/webjars/**",
-                                "/swagger/**",
-                                "/api-docs/**"
+                                "/webjars/**"
                         ).permitAll()
 
-                        .requestMatchers("/api/admins/**")
-                        .hasAuthority("ADMIN")
+                        // Protect all admin APIs
+                        .requestMatchers("/api/admins/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )

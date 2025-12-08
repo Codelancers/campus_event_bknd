@@ -22,9 +22,13 @@ public class JwtTokenProvider {
     }
 
     public String generateToken(String email, String role) {
+
+        // Store standardized Spring Security role format
+        String springRole = "ROLE_" + role;
+
         return Jwts.builder()
                 .setSubject(email)
-                .claim("role", role)
+                .claim("role", springRole)   // FIXED
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)

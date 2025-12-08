@@ -34,9 +34,9 @@ public class UserService {
         user.setPoints(0);
         
         user.setRegisteredEvents(new ArrayList<>());
-user.setWonEvents(new ArrayList<>());
-user.setOtpHash("");
-user.setOtpExpiry(null);
+        user.setWonEvents(new ArrayList<>());
+        user.setOtpHash("");
+        user.setOtpExpiry(null);
 
 
         user.setCreatedAt(Instant.now());
@@ -61,17 +61,31 @@ user.setOtpExpiry(null);
         return userRepository.findByEmail(email).isPresent();
     }
 
+    public boolean userExistsByEmail(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
+    public boolean userExistsById(String userId) {
+        return userRepository.findById(userId).isPresent();
+    }
+
+
 
 
     public User update(String userId, UserUpdateRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (request.getName() != null) user.setName(request.getName());
-        if (request.getPhone() != null) user.setPhone(request.getPhone());
+    if (request.getName() != null) user.setName(request.getName());
+    if (request.getEmail() != null) user.setEmail(request.getEmail());
+    if (request.getPhone() != null) user.setPhone(request.getPhone());
+    if (request.getDepartment() != null) user.setDepartment(request.getDepartment());
+    if (request.getYear() != null) user.setYear(request.getYear());
+    if (request.getRollNo() != null) user.setRollNo(request.getRollNo());
 
-        user.setUpdatedAt(Instant.now());
+    user.setUpdatedAt(Instant.now());
 
-        return userRepository.save(user);
-    }
+    return userRepository.save(user);
+}
+
 }
