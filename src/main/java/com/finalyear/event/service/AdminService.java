@@ -62,6 +62,7 @@ public class AdminService {
 
         if (request.getName() != null) admin.setName(request.getName());
         if (request.getEmail() != null) admin.setEmail(request.getEmail());
+        if (request.getAdminType() != null) admin.setAdminType(request.getAdminType());
 
         admin.setUpdatedAt(Instant.now());
         return adminRepository.save(admin);

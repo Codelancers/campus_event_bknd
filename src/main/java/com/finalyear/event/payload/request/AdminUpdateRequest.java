@@ -8,4 +8,5 @@ import lombok.Data;
 public class AdminUpdateRequest {
 private String name;
 private String email; // allow edit
+private Integer adminType;
 }

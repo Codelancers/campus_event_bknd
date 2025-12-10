@@ -13,4 +13,7 @@ public class AdminSignupRequest {
     @NotBlank
     @Email
     private String email;
+
+    @NotBlank
+    private Integer eventType;
 }

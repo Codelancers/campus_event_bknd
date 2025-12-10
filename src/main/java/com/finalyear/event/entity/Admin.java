@@ -22,6 +22,7 @@ private String email;
 private String otpHash; // bcrypt hashed OTP
 private Instant otpExpiry;
 private List<String> roles;
+private Integer adminType;
 private Instant createdAt;
 private Instant updatedAt;
 }
