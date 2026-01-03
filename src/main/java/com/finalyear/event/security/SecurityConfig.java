@@ -28,10 +28,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
 
-                        // Allow browser preflight
+                        // Preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Public routes
+                        // Public APIs
                         .requestMatchers(
                                 "/api/users/register",
                                 "/api/users/otp",
@@ -49,13 +49,13 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
-                        // Admin only
+                        // Admin protected
                         .requestMatchers("/api/admins/**").hasRole("ADMIN")
 
-                        // Both USER + ADMIN (must be authenticated)
+                        // Events: USER + ADMIN allowed (just authenticated)
                         .requestMatchers("/api/events/**").authenticated()
 
-                        // Everything else secured
+                        // Others secure
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

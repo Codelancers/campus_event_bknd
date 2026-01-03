@@ -32,24 +32,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String header = request.getHeader("Authorization");
 
         if (header != null && header.startsWith("Bearer ")) {
+
             String token = header.substring(7);
 
             if (tokenProvider.validateToken(token)) {
+
                 String email = tokenProvider.getEmailFromToken(token);
                 String role = tokenProvider.getRoleFromToken(token);
 
-                // Ensure format ROLE_XXX
+                // Ensure proper Spring format
                 if (!role.startsWith("ROLE_")) {
-                    role = "ROLE_" + role;
+                    role = "ROLE_" + role.toUpperCase();
                 }
 
                 var authorities = List.of(new SimpleGrantedAuthority(role));
 
-                var auth = new UsernamePasswordAuthenticationToken(
-                        email,
-                        null,
-                        authorities
-                );
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(
+                                email,
+                                null,
+                                authorities
+                        );
 
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
@@ -60,4 +63,3 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
-
