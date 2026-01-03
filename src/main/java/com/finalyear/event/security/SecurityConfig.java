@@ -30,6 +30,7 @@ public class SecurityConfig {
                                 "/api/admins/register",
                                 "/api/admins/otp",
                                 "/api/admins/verify",
+                                "/api/events/**",
 
                                 // Swagger
                                 "/swagger-ui/**",
