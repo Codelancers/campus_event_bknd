@@ -1,10 +1,14 @@
 package com.finalyear.event.service;
 
 import com.finalyear.event.entity.Event;
+import com.finalyear.event.entity.User;
 import com.finalyear.event.payload.request.EventUpdateRequest;
 import com.finalyear.event.payload.request.EventCreateRequest;
 import com.finalyear.event.repository.EventRepository;
+import com.finalyear.event.repository.UserRepository;
+
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -20,13 +24,20 @@ public class EventService {
     private final EventRepository eventRepository;
     private final SequenceGeneratorService sequenceGeneratorService;
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
 
+    @Autowired
     public EventService(EventRepository eventRepository,
                         SequenceGeneratorService sequenceGeneratorService,
-                        NotificationService notificationService) {
+                        NotificationService notificationService,
+                        UserRepository userRepository,
+                        EmailService emailService) {
         this.eventRepository = eventRepository;
         this.sequenceGeneratorService = sequenceGeneratorService;
         this.notificationService = notificationService;
+        this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     // CREATE EVENT
@@ -49,14 +60,18 @@ public class EventService {
         event.setRegistrationEndDate(request.getRegistrationEndDate());
 
         event.setMaxParticipants(
-                request.getMaxParticipants() != null
-                        ? request.getMaxParticipants()
-                        : -1
+                request.getMaxParticipants() != null ? request.getMaxParticipants() : -1
         );
 
         event.setCount(0);
+        event.setCreatedBy(creatorId);
+        event.setStatus("SCHEDULED");
+        event.setCreatedAt(Instant.now());
+        event.setUpdatedAt(Instant.now());
 
-        // Handle poster upload
+        // ==========================
+        // POSTER UPLOAD
+        // ==========================
         try {
             if (request.getPoster() != null && !request.getPoster().isEmpty()) {
                 event.setPoster(new Binary(request.getPoster().getBytes()));
@@ -65,26 +80,52 @@ public class EventService {
             throw new RuntimeException("Error processing poster image", e);
         }
 
-        event.setCreatedBy(creatorId);
-        event.setStatus("SCHEDULED");
-        event.setCreatedAt(Instant.now());
-        event.setUpdatedAt(Instant.now());
-
         Event saved = eventRepository.save(event);
 
-        // Notifications
-        if (saved.getDepartment() == null ||
-            saved.getDepartment().equalsIgnoreCase("All") ||
-            saved.getDepartment().isEmpty()) {
+        // ==========================
+        // TARGET USER LOGIC
+        // ==========================
+        List<User> targetUsers;
 
+        boolean isAllDepartments =
+                request.getDepartment() == null ||
+                request.getDepartment().isBlank() ||
+                request.getDepartment().equalsIgnoreCase("ALL");
+
+        if (isAllDepartments) {
+
+            // ALL USERS
+            targetUsers = userRepository.findAll();
+
+            // 🔔 In-app notification (ALL)
             notificationService.sendEventNotification(saved);
 
         } else {
-            notificationService.sendDepartmentNotification(saved.getDepartment(), saved);
+
+            // SINGLE DEPARTMENT
+            targetUsers = userRepository.findByDepartment(request.getDepartment());
+
+            // 🔔 In-app notification (Department)
+            notificationService.sendDepartmentNotification(
+                    request.getDepartment(), saved
+            );
+        }
+
+        // ==========================
+        // EMAIL NOTIFICATIONS
+        // ==========================
+        for (User user : targetUsers) {
+            emailService.sendEventCreatedEmail(
+                    user.getEmail(),
+                    saved.getTitle(),
+                    isAllDepartments ? "All Departments" : user.getDepartment()
+            );
         }
 
         return saved;
     }
+
+
 
     // UPDATE EVENT
     public Event updateEvent(String id, EventUpdateRequest request) {

@@ -17,26 +17,52 @@ public class EmailService {
     }
 
     public void sendOtp(String toEmail, String otp) {
-    try {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("projectfinalyear8685@gmail.com");   // IMPORTANT
-        message.setTo(toEmail);
-        message.setSubject("Your OTP for Login / Registration");
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("projectfinalyear8685@gmail.com");   // IMPORTANT
+            message.setTo(toEmail);
+            message.setSubject("Your OTP for Login / Registration");
 
-        message.setText(
-            "Hello,\n\n" +
-            "Your OTP is: " + otp + "\n\n" +
-            "This OTP is valid for 5 minutes.\n\n" +
-            "Regards,\n" +
-            "College Event Management Team"
-        );
+            message.setText(
+                "Hello,\n\n" +
+                "Your OTP is: " + otp + "\n\n" +
+                "This OTP is valid for 5 minutes.\n\n" +
+                "Regards,\n" +
+                "College Event Management Team"
+            );
 
-        mailSender.send(message);
-        logger.info("OTP email sent to {}", toEmail);
+            mailSender.send(message);
+            logger.info("OTP email sent to {}", toEmail);
 
-    } catch (Exception ex) {
-        logger.error("Failed to send OTP email to {}: {}", toEmail, ex.getMessage());
+        } catch (Exception ex) {
+            logger.error("Failed to send OTP email to {}: {}", toEmail, ex.getMessage());
+        }
     }
-}
+
+    public void sendEventCreatedEmail(String toEmail, String eventTitle, String department) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("projectfinalyear8685@gmail.com");
+            message.setTo(toEmail);
+            message.setSubject("📢 New Event Announced!");
+
+            message.setText(
+                "Hello,\n\n" +
+                "A new event has been announced.\n\n" +
+                "📌 Event: " + eventTitle + "\n" +
+                "🏫 Department: " + (department == null ? "All Departments" : department) + "\n\n" +
+                "Please login to the portal for full details.\n\n" +
+                "Regards,\n" +
+                "College Event Management Team"
+            );
+
+            mailSender.send(message);
+            logger.info("Event email sent to {}", toEmail);
+
+        } catch (Exception ex) {
+            logger.error("Failed to send event email to {}: {}", toEmail, ex.getMessage());
+        }
+    }
+
 
 }

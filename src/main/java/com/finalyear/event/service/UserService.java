@@ -70,8 +70,13 @@ public class UserService {
     }
 
 
-
-
+    public List<User> getUsersByDepartmentOrAll(String department) {
+        if (department == null || department.isBlank() || department.equalsIgnoreCase("ALL")) {
+            return userRepository.findAll();
+        }
+        return userRepository.findByDepartment(department);
+    }
+    
     public User update(String userId, UserUpdateRequest request) {
     User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));

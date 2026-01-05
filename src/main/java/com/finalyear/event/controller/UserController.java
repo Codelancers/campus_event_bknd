@@ -5,12 +5,14 @@ import com.finalyear.event.payload.request.RegisterUserRequest;
 import com.finalyear.event.payload.request.UserUpdateRequest;
 import com.finalyear.event.payload.request.OtpRequest;
 import com.finalyear.event.payload.request.VerifyOtpRequest;
+import com.finalyear.event.payload.response.ApiResponse;
 import com.finalyear.event.payload.response.AuthResponse;
 import com.finalyear.event.security.JwtTokenProvider;
 import com.finalyear.event.service.OtpService;
 import com.finalyear.event.service.UserService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -140,4 +142,16 @@ public class UserController {
 
         return ResponseEntity.ok(res);
     }
+
+    @GetMapping("/department/{department}")
+    public ResponseEntity<?> getUsersByDepartment(
+            @PathVariable String department) {
+
+        List<User> users = userService.getUsersByDepartmentOrAll(department);
+
+        return ResponseEntity.ok(
+                new ApiResponse("Users retrieved", users)
+        );
+    }
+
 }

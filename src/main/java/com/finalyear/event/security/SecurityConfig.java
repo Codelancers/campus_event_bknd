@@ -36,7 +36,7 @@ public class SecurityConfig {
                                 "/api/users/register",
                                 "/api/users/otp",
                                 "/api/users/verify",
-
+                                "api/users/department/**",
                                 "/api/admins/register",
                                 "/api/admins/otp",
                                 "/api/admins/verify",
