@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import org.bson.types.Binary;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -32,8 +33,10 @@ public class Event {
     private LocalDateTime endTime;
     private Integer maxParticipants;
     private Integer count; // New field
-    private String coverImageUrl;
-    private Binary poster;
+    // private String coverImageUrl; // Removed as per request
+    
+    @JsonIgnore
+    private Binary poster; // Exposed as per request
     private String requirements;
     private LocalDate registrationEndDate;
     private String createdBy; // user id

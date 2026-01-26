@@ -57,6 +57,14 @@ public class EventController {
         return ResponseEntity.ok(new ApiResponse("Event deleted", null));
     }
 
+    // 🔥 DECLARE WINNER
+    @PostMapping("/{eventId}/declare-winner")
+    public ResponseEntity<?> declareWinner(@PathVariable String eventId,
+                                           @RequestParam String rollNo) {
+        Event event = eventService.declareWinner(eventId, rollNo);
+        return ResponseEntity.ok(new ApiResponse("Winner declared successfully", event));
+    }
+
     // 🔥 LIST ALL EVENTS
     @GetMapping("/all")
     public ResponseEntity<?> getAllEvents() {

@@ -40,13 +40,20 @@ public class SecurityConfig {
                                 "/api/admins/register",
                                 "/api/admins/otp",
                                 "/api/admins/verify",
+//                                "/api/events/create",
+//                                "/api/registrations/apply",
+//                                "/api/events/all",
+//                                "/api/registrations/student/{studentId}",
 
                                 // Swagger
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
-                                "/webjars/**"
+                                "/webjars/**",
+                                
+                                // WebSocket
+                                "/ws/notifications/**"
                         ).permitAll()
 
                         // Admin protected

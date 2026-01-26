@@ -56,6 +56,11 @@ public class UserService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
+
+    public User getByRollNo(String rollNo) {
+        return userRepository.findByRollNo(rollNo)
+                .orElseThrow(() -> new RuntimeException("User not found with Roll No: " + rollNo));
+    }
     
     public boolean existsByEmail(String email) {
         return userRepository.findByEmail(email).isPresent();
@@ -63,6 +68,10 @@ public class UserService {
 
     public boolean userExistsByEmail(String email) {
         return userRepository.findByEmail(email).isPresent();
+    }
+
+    public boolean userExistsByRollNo(String rollNo) {
+        return userRepository.findByRollNo(rollNo).isPresent();
     }
 
     public boolean userExistsById(String userId) {

@@ -19,6 +19,7 @@ public class EventRegistration {
     private String studentEmail;
     private String department;
     private String year;
+    private String rollNo;
     private String eventType;
     
     private String status; // REGISTERED, CANCELLED, ATTENDED, WINNER

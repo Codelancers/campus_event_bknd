@@ -46,6 +46,14 @@ public class UserController {
             return ResponseEntity.status(409).body(res);
         }
 
+        if (userService.userExistsByRollNo(request.getRollNo())) {
+            Map<String, Object> res = new HashMap<>();
+            res.put("success", false);
+            res.put("status", 409);
+            res.put("message", "Roll Number already registered");
+            return ResponseEntity.status(409).body(res);
+        }
+
         User created = userService.register(request);
 
         Map<String, Object> res = new HashMap<>();
@@ -152,6 +160,12 @@ public class UserController {
         return ResponseEntity.ok(
                 new ApiResponse("Users retrieved", users)
         );
+    }
+
+    @GetMapping("/student/{rollNo}")
+    public ResponseEntity<?> getUserByRollNo(@PathVariable String rollNo) {
+        User user = userService.getByRollNo(rollNo);
+        return ResponseEntity.ok(new ApiResponse("User found", user));
     }
 
 }

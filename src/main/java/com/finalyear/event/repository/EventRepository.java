@@ -10,10 +10,10 @@ import com.finalyear.event.entity.Event;
 
 public interface EventRepository extends MongoRepository<Event, String> {
     
-    @Query("{ 'registrationEndDate': { $gte: ?1 }, $or: [ { 'department': ?0 }, { 'department': 'All' }, { 'department': null } ] }")
+    @Query("{ 'registrationEndDate': { $gte: ?1 }, $or: [ { 'department': ?0 }, { 'department': { $regex: '^all$', $options: 'i' } }, { 'department': null } ] }")
     List<Event> findEventsForDepartment(String department, LocalDate currentDate);
 
-    @Query("{ 'registrationEndDate': { $gte: ?2 }, 'eventType': ?1, $or: [ { 'department': ?0 }, { 'department': 'All' }, { 'department': null } ] }")
+    @Query("{ 'registrationEndDate': { $gte: ?2 }, 'eventType': ?1, $or: [ { 'department': ?0 }, { 'department': { $regex: '^all$', $options: 'i' } }, { 'department': null } ] }")
     List<Event> findEventsForDepartmentAndType(String department, Integer eventType, LocalDate currentDate);
 
     java.util.Optional<Event> findByEventId(String eventId);

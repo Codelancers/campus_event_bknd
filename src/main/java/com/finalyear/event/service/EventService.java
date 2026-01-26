@@ -26,18 +26,21 @@ public class EventService {
     private final NotificationService notificationService;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final com.finalyear.event.repository.EventRegistrationRepository eventRegistrationRepository;
 
     @Autowired
     public EventService(EventRepository eventRepository,
                         SequenceGeneratorService sequenceGeneratorService,
                         NotificationService notificationService,
                         UserRepository userRepository,
-                        EmailService emailService) {
+                        EmailService emailService,
+                        com.finalyear.event.repository.EventRegistrationRepository eventRegistrationRepository) {
         this.eventRepository = eventRepository;
         this.sequenceGeneratorService = sequenceGeneratorService;
         this.notificationService = notificationService;
         this.userRepository = userRepository;
         this.emailService = emailService;
+        this.eventRegistrationRepository = eventRegistrationRepository;
     }
 
     // CREATE EVENT
@@ -85,26 +88,18 @@ public class EventService {
         // ==========================
         // TARGET USER LOGIC
         // ==========================
-        List<User> targetUsers;
-
+        // ==========================
+        // TARGET USER LOGIC
+        // ==========================
         boolean isAllDepartments =
                 request.getDepartment() == null ||
                 request.getDepartment().isBlank() ||
                 request.getDepartment().equalsIgnoreCase("ALL");
 
         if (isAllDepartments) {
-
-            // ALL USERS
-            targetUsers = userRepository.findAll();
-
             // 🔔 In-app notification (ALL)
             notificationService.sendEventNotification(saved);
-
         } else {
-
-            // SINGLE DEPARTMENT
-            targetUsers = userRepository.findByDepartment(request.getDepartment());
-
             // 🔔 In-app notification (Department)
             notificationService.sendDepartmentNotification(
                     request.getDepartment(), saved
@@ -112,15 +107,9 @@ public class EventService {
         }
 
         // ==========================
-        // EMAIL NOTIFICATIONS
+        // EMAIL NOTIFICATIONS (ASYNC)
         // ==========================
-        for (User user : targetUsers) {
-            emailService.sendEventCreatedEmail(
-                    user.getEmail(),
-                    saved.getTitle(),
-                    isAllDepartments ? "All Departments" : user.getDepartment()
-            );
-        }
+        notificationService.sendEventCreatedEmails(saved);
 
         return saved;
     }
@@ -131,7 +120,8 @@ public class EventService {
     public Event updateEvent(String id, EventUpdateRequest request) {
 
         Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .or(() -> eventRepository.findByEventId(id))
+                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
 
         if (request.getTitle() != null) event.setTitle(request.getTitle());
         if (request.getDescription() != null) event.setDescription(request.getDescription());
@@ -196,7 +186,51 @@ public class EventService {
     public Event getEventOrThrow(String id) {
     return eventRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
-}
+    }
 
+
+    public Event declareWinner(String eventId, String rollNo) {
+        // 1. Find Event (support both MongoID and Business Key)
+        Event event = eventRepository.findById(eventId)
+                .or(() -> eventRepository.findByEventId(eventId))
+                .orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
+
+        // 2. Find Student by Roll No
+        User student = userRepository.findByRollNo(rollNo)
+                .orElseThrow(() -> new RuntimeException("Student not found with Roll No: " + rollNo));
+
+        // 3. Find Registration (Using Business Key event.getEventId())
+        com.finalyear.event.entity.EventRegistration registration = eventRegistrationRepository.findByEventIdAndStudentId(event.getEventId(), student.getId())
+                .orElseThrow(() -> new RuntimeException("Student with Roll No " + rollNo + " is not registered for event " + event.getEventId()));
+
+        // 4. Update Event (Add Winner)
+        if (event.getWinnerIds() == null) {
+            event.setWinnerIds(new java.util.ArrayList<>());
+        }
+        if (!event.getWinnerIds().contains(student.getRollNo())) {
+            event.getWinnerIds().add(student.getRollNo());
+            eventRepository.save(event);
+        }
+
+        // 5. Update Registration Status
+        registration.setStatus("WINNER");
+        eventRegistrationRepository.save(registration);
+
+        // 6. Update User (Add won event)
+        if (student.getWonEvents() == null) {
+            student.setWonEvents(new java.util.ArrayList<>());
+        }
+        if (!student.getWonEvents().contains(event.getId())) {
+            student.getWonEvents().add(event.getId());
+            
+            // Optionally add points for winning?
+             if (student.getPoints() == null) student.setPoints(0);
+             student.setPoints(student.getPoints() + 10); // Example: 10 points for winning
+
+            userRepository.save(student);
+        }
+
+        return event;
+    }
 }
 
