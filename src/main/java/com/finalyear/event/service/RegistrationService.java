@@ -25,13 +25,16 @@ public class RegistrationService {
     private final EventRegistrationRepository registrationRepository;
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     public RegistrationService(EventRegistrationRepository registrationRepository,
                                EventRepository eventRepository,
-                               UserRepository userRepository) {
+                               UserRepository userRepository,
+                               EmailService emailService) {
         this.registrationRepository = registrationRepository;
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
     public EventRegistration registerStudent(RegistrationRequest request) {
         // 1. Check if event exists
@@ -96,6 +99,15 @@ public class RegistrationService {
         }
         event.setCount(event.getCount() + 1);
         eventRepository.save(event);
+
+        // 9. Send Confirmation Email
+        emailService.sendRegistrationSuccessEmail(
+            student.getEmail(),
+            student.getName(),
+            event.getTitle(),
+            event.getStartTime().toString(), // Or format date nicely
+            event.getVenue()
+        );
 
         return savedRegistration;
     }

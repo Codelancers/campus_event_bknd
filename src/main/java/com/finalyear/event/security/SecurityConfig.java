@@ -39,12 +39,12 @@ public class SecurityConfig {
                                 "api/users/department/**",
                                 "/api/admins/register",
                                 "/api/admins/otp",
+//                                "/api/certificates/**",
                                 "/api/admins/verify",
 //                                "/api/events/create",
 //                                "/api/registrations/apply",
 //                                "/api/events/all",
 //                                "/api/registrations/student/{studentId}",
-
                                 // Swagger
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

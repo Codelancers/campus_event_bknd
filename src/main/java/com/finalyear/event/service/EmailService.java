@@ -65,4 +65,28 @@ public class EmailService {
     }
 
 
+    public void sendRegistrationSuccessEmail(String toEmail, String studentName, String eventTitle, String eventDate, String venue) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("projectfinalyear8685@gmail.com");
+            message.setTo(toEmail);
+            message.setSubject("✅ Registration Successful: " + eventTitle);
+
+            message.setText(
+                "Hello " + studentName + ",\n\n" +
+                "You have successfully registered for the event: " + eventTitle + ".\n\n" +
+                "📅 Date: " + eventDate + "\n" +
+                "📍 Venue: " + venue + "\n\n" +
+                "We look forward to seeing you there!\n\n" +
+                "Regards,\n" +
+                "College Event Management Team"
+            );
+
+            mailSender.send(message);
+            logger.info("Registration success email sent to {}", toEmail);
+
+        } catch (Exception ex) {
+            logger.error("Failed to send registration email to {}: {}", toEmail, ex.getMessage());
+        }
+    }
 }
